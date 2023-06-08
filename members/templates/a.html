@@ -1,0 +1,859 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        clifford: '#da373d',
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            body {
+                background-size: 19rem;
+                background-image: url('{% static "bg-3.png" %}');
+            }
+            input[type=number]::-webkit-inner-spin-button, 
+            input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; 
+                margin: 0; 
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(() => {
+            let editable = false;
+            let isDragging = false;
+            let coloring = false;
+            let id = 1;
+            let arr = [];
+            let cells = [];
+            let setColored = new Set();
+            let coloredCell = 'bg-slate-400'
+
+            const gen = () => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+                if (m && n) {
+                    setColored = new Set();
+                    $('#solvestatus').empty();
+                    $("#grid").empty();
+                    id = 1;
+                    arr = [];
+                    cells = [];
+                    $('#grid').removeClass('bg-green-400');
+                    $('#grid').addClass('bg-orange-200');
+                    for (let i = 0; i < 1e4; i++) {
+                        arr.push(new Set());
+                    }
+
+                    for (let i = 0; i < m; i++) {
+                        let tmp = [];
+                        for (let j = 0; j < n; j++)
+                            tmp.push(0);
+                        cells.push(tmp);
+                    }
+
+                    for (let i = 0; i <= m; i++) {
+                        $("#grid").append(`<div id=r${i} class='flex bg-white'>`);
+                        if (i != 0) $(`#r${i}`).append(`<input id="CR${i}" type='number' min='0' class="constraint-row text-center w-10 h-10 border-2 border-red-500"></input>`);
+                        for (let j = 0; j < n; j++) {
+                            if (i == 0)
+                                $(`#r${i}`).append(`<input id="CC${j+1}" type='number' min='0' class="constraint-col text-center w-10 h-10 border-2 border-red-500"></input>`);
+                            else
+                                if (j == 0 && i == 1) 
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-500 border-l-blue-500 border-gray-300"></button>`);
+                                else if (i == 1 && j == n - 1)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-500 border-t-blue-500 border-gray-300"></button>`);
+                                else if (i == 1)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-500 border-gray-300"></button>`);
+                                else if (i == m && j == 0)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-l-blue-500 border-gray-300"></button>`);
+                                else if (i == m && j == n - 1)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-r-blue-500 border-gray-300"></button>`);
+                                else if (j == 0)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-l-blue-500 border-gray-300"></button>`);
+                                else if (j == n - 1)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-500 border-gray-300"></button>`);
+                                else if (i == m)
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-gray-300"></button>`);
+                                else
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-gray-300"></button>`);
+                        }
+                    }
+                }
+            }
+
+            $('#gen').click(() => {
+                if (!coloring) {
+                    gen();
+                }
+            });
+
+            $('#edit').click(() => {
+                if (!coloring) {
+                    setColored = new Set();
+                    let m = Number($('#M').val()), n = Number($('#N').val());
+                    for (let i = 1; i <= m*n; i++) {
+                        $(`#${i}`).empty();
+                        $(`#${i}`).removeClass(coloredCell);
+                    }
+                    $('#status').empty();
+                    editable = !editable
+                    if (editable) {
+                        $('#determine').removeClass('bg-yellow-600')
+                        $('#determine').addClass('bg-gray-500')
+                        $('#determine').removeClass('hover:bg-yellow-500')
+                        $('#determine').removeClass('active:bg-yellow-700')
+                        $('#color').prop('disable', true);
+                        $('#color').removeClass('bg-cyan-600')
+                        $('#color').removeClass('hover:bg-cyan-500')
+                        $('#color').removeClass('active:bg-cyan-700')
+                        $('#color').addClass('bg-gray-600')
+                        $('#edit').removeClass('bg-blue-600')
+                        $('#edit').removeClass('hover:bg-blue-500')
+                        $('#edit').removeClass('active:bg-blue-700')
+                        $('#edit').addClass('bg-red-600')
+                        $('#edit').addClass('hover:bg-red-500')
+                        $('#edit').addClass('active:bg-red-700')
+                    } else {
+                        $('#determine').removeClass('bg-gray-500')
+                        $('#determine').addClass('bg-yellow-600')
+                        $('#determine').addClass('hover:bg-yellow-500')
+                        $('#determine').addClass('active:bg-yellow-700')
+                        $('#edit').removeClass('bg-red-600')
+                        $('#edit').removeClass('hover:bg-red-500')
+                        $('#edit').removeClass('active:bg-red-700')
+                        $('#edit').addClass('bg-blue-600')
+                        $('#edit').addClass('hover:bg-blue-500')
+                        $('#edit').addClass('active:bg-blue-700')
+                        $('#color').prop('disable', false);
+                        $('#color').removeClass('bg-gray-600')
+                        $('#color').addClass('bg-cyan-600')
+                        $('#color').addClass('hover:bg-cyan-500')
+                        $('#color').addClass('active:bg-cyan-700')
+                    }
+                }
+            });
+
+            const idToCell = (id) => {
+                id--;
+                let n = Number($('#N').val());
+                return [Math.floor(id/n), id%n];
+            }
+
+            const cellToId = (x, y) => {
+                let n = Number($('#N').val());
+                return (x*n + y) + 1;
+            }
+
+            const isInside = (x, y) => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+                return x >= 0 && y >= 0 && x < m && y < n;
+            }
+
+            let g = [], visited = [], s = {}, last = 1;
+
+            const validate = () => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+
+                let CC = [];
+                for (let i = 1; i <= n; i++) {
+                    if (!$(`#CC${i}`).val()) 
+                        CC.push(-1);
+                    else 
+                        CC.push(Number($(`#CC${i}`).val()));
+                }
+                let CR = [];
+                for (let i = 1; i <= m; i++) {
+                    if (!$(`#CR${i}`).val()) 
+                        CR.push(-1);
+                    else
+                        CR.push(Number($(`#CR${i}`).val()));
+                }
+
+                let data = {
+                    m: Number($('#M').val()),
+                    n: Number($('#N').val()),
+                    S: Array.from(setColored),
+                    CG: visited,
+                    CC,
+                    CR,
+                };
+
+                // console.log(data);
+
+                $.post('/api/validate', JSON.stringify(data), (res, status) => {
+                    // console.log(res);
+                    if (res.Model == true) {
+                        $('#solvestatus').empty()
+                        $('#solvestatus').append('Solved')
+                        $('#grid').removeClass('bg-orange-200');
+                        $('#grid').addClass('bg-green-400');
+                    } else {
+                        $('#grid').removeClass('bg-green-400');
+                        $('#grid').addClass('bg-orange-200');
+                        $('#solvestatus').empty()
+                    }
+                        
+                });
+            }
+
+            const detemineTile = () => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+
+                g = [], visited = [], s = {}, last = 1;
+
+                for (let i = 0; i < m; i++) {
+                    let tmp = [], vis = [];
+                    for (let j = 0; j < n; j++) {
+                        vis.push(0);
+                        if (cells[i][j] == 0) {
+                            tmp.push(0);
+                        } else if (cells[i][j] in s) {
+                            tmp.push(s[cells[i][j]]);
+                        } else {
+                            tmp.push(last);
+                            s[cells[i][j]] = last;
+                            last++;
+                        }
+                    }
+                    g.push(tmp);
+                    visited.push(vis);
+                }
+
+                let moveX = [0, 0, 1, -1];
+                let moveY = [1, -1, 0, 0];
+
+                const dfs = (x, y, cur) => {
+                    visited[x][y] = cur;
+                    for (let i = 0; i < 4; i++) {
+                        let new_x = x + moveX[i], new_y = y + moveY[i];
+                        if (isInside(new_x, new_y) && g[new_x][new_y] === g[x][y] && !visited[new_x][new_y]) {
+                            dfs(new_x, new_y, cur)
+                        }
+                    }
+                }
+
+                let cur = 1;
+                for (let i = 0; i < m; i++) {
+                    for (let j = 0; j < n; j++) {
+                        if (!visited[i][j]) {
+                            dfs(i, j, cur);
+                            cur++;
+                        }
+                    }
+                }
+            
+                for (let i = 1; i <= m*n; i++) {
+                    $(`#${i}`).empty();
+                    $(`#${i}`).append(`<p id='${i}' class='text-red-400 font-semibold'>${visited[idToCell(i)[0]][idToCell(i)[1]]}</p>`);
+                }
+
+                $('#solvestatus').empty();
+            }
+
+            const constructGrid = (m, n, res, S) => {
+                $('#M').val(m);
+                $('#N').val(n);
+
+                gen();
+                
+                let CC = [], CR = []
+                for (let i = 0; i < m; i++)
+                    CR.push(0);
+                for (let i = 0; i < n; i++)
+                    CC.push(0);
+
+                for (let i = 0; i < m; i++) {
+                    for (let j = 0; j < n; j++) {
+                        cells[i][j] = Number(res[i][j]);
+                        if (S.has(res[i][j])) {
+                            CR[i]++, CC[j]++;
+                        }
+                    }
+                }
+
+                let complete = Math.floor(Math.random() * 2);
+
+                for (let i = 0; i < n; i++) {
+                    if (Math.floor(Math.random() * 10) >= 3 || complete)
+                        $(`#CC${i+1}`).val(CC[i]);
+                }
+                for (let i = 0; i < m; i++) {
+                    if (Math.floor(Math.random() * 10) >= 3 || complete)
+                        $(`#CR${i+1}`).val(CR[i]);
+                }
+
+                detemineTile();
+
+                for (let i = 0; i < m; i++) {
+                    for (let j = 0; j < n; j++) {
+                        if (isInside(i+1, j) && cells[i+1][j] != cells[i][j]) 
+                            $(`#${cellToId(i,j)}`).addClass('border-b-blue-700');
+                        if (isInside(i, j+1) && cells[i][j+1] != cells[i][j]) 
+                            $(`#${cellToId(i,j)}`).addClass('border-r-blue-700');
+                        if (isInside(i-1, j) && cells[i-1][j] != cells[i][j]) 
+                            $(`#${cellToId(i,j)}`).addClass('border-t-blue-700');
+                        if (isInside(i, j-1) && cells[i][j-1] != cells[i][j]) 
+                            $(`#${cellToId(i,j)}`).addClass('border-l-blue-700');
+                    }
+                }
+            }
+
+            const constructRandomGrid = () => {
+                let m = Math.floor(Math.random() * 15) + 1, n = Math.floor(Math.random() * 15) + 1;
+
+                let totalCell = m * n;
+                let moveX = [0, 0, 1, -1];
+                let moveY = [1, -1, 0, 0];
+
+                let res = [];
+                for (let i = 0; i < m; i++) {
+                    let tmp = [];
+                    for (let j = 0; j < n; j++)
+                        tmp.push(0);
+                    res.push(tmp);
+                }
+
+                const isInside2 = (x, y) => {
+                    return x >= 0 && y >= 0 && x < m && y < n;
+                }
+
+                let c = 0;
+                const dfs = (n, x, y, cur) => {
+                    if (c < n) {
+                        res[x][y] = cur;
+
+                        for (let i = 0; i < 4; i++) {
+                            let rand = Math.floor(Math.random() * 4);
+                            let new_x = x + moveX[rand], new_y = y + moveY[rand];
+                            if (isInside2(new_x, new_y) && !res[new_x][new_y]) {
+                                c += 1
+                                dfs(n, new_x, new_y, cur);
+                            }
+                        }
+                    }
+                }
+
+                let cellNum = 1;
+                for (let i = 0; i < m; i++) {
+                    for (let j = 0; j < n; j++) {
+                        if (res[i][j] == 0) {
+                            let tmp = 0;
+
+                            tmp = Math.floor(Math.random() * 5) + 1;
+
+                            c = 0;
+
+                            dfs(tmp, i, j, cellNum++);
+                        }
+                    }
+                }
+                // console.log(res);
+                
+                let numberColor = Math.floor(Math.random() * Math.floor(cellNum*2 / 3)) + 1;
+                let i = 0;
+                let S = new Set();
+                do {
+                    let tmp = Math.floor(Math.random() * cellNum) + 1;
+                    if (!S.has(tmp)) {
+                        S.add(tmp);
+                        i++
+                    }
+                } while (i < numberColor);
+
+                constructGrid(m, n, res, S);
+            }
+
+            $('#random').click(() => {
+                constructRandomGrid();
+            });
+
+            $('#file').change(async (e) => {
+                let res = e.target.files[0];
+
+                let a;
+                const reader = new FileReader();
+                reader.onload = await ((e) => {
+                    try {
+                        let text = e.target.result;
+    
+                        let arr = text.trim().split('\n')
+                        for (let i = 0; i < arr.length; i++) {
+                            arr[i] = arr[i].trim().split(' ')
+                        }
+                        // console.log(arr);
+                        let m = arr[0][0], n = arr[0][1]
+
+                        $('#M').val(m);
+                        $('#N').val(n);
+
+                        gen();
+
+                        for (let i = 0; i < n; i++)
+                            if (arr[1][i] != -1)
+                                $(`#CC${i+1}`).val(arr[1][i]);
+                        for (let i = 0; i < m; i++)
+                            if (arr[2][i] != -1)
+                                $(`#CR${i+1}`).val(arr[2][i]);
+                            
+                        for (let i = 0; i < m; i++) {
+                            for (let j = 0; j < n; j++) {
+                                cells[i][j] = Number(arr[i+3][j]);
+                            }
+                        }
+
+                        detemineTile();
+                        // console.log(cells);
+
+                        for (let i = 0; i < m; i++) {
+                            for (let j = 0; j < n; j++) {
+                                if (isInside(i+1, j) && cells[i+1][j] != cells[i][j]) 
+                                    $(`#${cellToId(i,j)}`).addClass('border-b-blue-700');
+                                if (isInside(i, j+1) && cells[i][j+1] != cells[i][j]) 
+                                    $(`#${cellToId(i,j)}`).addClass('border-r-blue-700');
+                                if (isInside(i-1, j) && cells[i-1][j] != cells[i][j]) 
+                                    $(`#${cellToId(i,j)}`).addClass('border-t-blue-700');
+                                if (isInside(i, j-1) && cells[i][j-1] != cells[i][j]) 
+                                    $(`#${cellToId(i,j)}`).addClass('border-l-blue-700');
+                            }
+                        }
+                    } catch (e) {
+                        console.error("File data is not valid \n", e);
+                    }
+                });
+                res = reader.readAsText(res, "UTF-8");
+            });
+
+            $('#clear').click(() => {
+                if (!coloring) {
+                    let m = Number($('#M').val()), n = Number($('#N').val());
+                    for (let i = 1; i <= m*n; i++) {
+                        $(`#${i}`).empty();
+                        $(`#${i}`).removeClass(coloredCell);
+                    }
+                    $('.constraint-col').val('');
+                    $('.constraint-row').val('');
+                    $('#status').empty();
+                    $('#solvestatus').empty();
+                    $('#grid').removeClass('bg-green-400');
+                    $('#grid').addClass('bg-orange-200');
+                    setColored = new Set();
+                }
+            });
+
+            $('#color').click(() => {
+                if (!editable) {
+                    coloring = !coloring;
+    
+                    detemineTile();
+                    if (coloring) {
+                        $('#determine').removeClass('bg-yellow-600')
+                        $('#determine').addClass('bg-gray-500')
+                        $('#determine').removeClass('hover:bg-yellow-500')
+                        $('#determine').removeClass('active:bg-yellow-700')
+                        $('#color').removeClass('bg-cyan-600')
+                        $('#color').removeClass('hover:bg-cyan-500')
+                        $('#color').removeClass('active:bg-cyan-700')
+                        $('#color').addClass('bg-red-600')
+                        $('#color').addClass('hover:bg-red-500')
+                        $('#color').addClass('active:bg-red-700')
+                        $('#edit').prop('disable', true);
+                        $('#edit').removeClass('bg-blue-600')
+                        $('#edit').removeClass('hover:bg-blue-500')
+                        $('#edit').removeClass('active:bg-blue-700')
+                        $('#edit').addClass('bg-gray-500')
+                        $('#gen').removeClass('bg-green-600')
+                        $('#gen').removeClass('hover:bg-green-500')
+                        $('#gen').removeClass('active:bg-green-700')
+                        $('#gen').addClass('bg-gray-500')
+                        $('#clear').removeClass('bg-red-600')
+                        $('#clear').removeClass('hover:bg-red-500')
+                        $('#clear').removeClass('active:bg-red-700')
+                        $('#clear').addClass('bg-gray-500')
+                    } else {
+                        $('#determine').removeClass('bg-gray-500')
+                        $('#determine').addClass('bg-yellow-600')
+                        $('#determine').addClass('hover:bg-yellow-500')
+                        $('#determine').addClass('active:bg-yellow-700')
+                        $('#color').removeClass('bg-red-600')
+                        $('#color').removeClass('hover:bg-red-500')
+                        $('#color').removeClass('active:bg-red-700')
+                        $('#color').addClass('bg-cyan-600')
+                        $('#color').addClass('hover:bg-cyan-500')
+                        $('#color').addClass('active:bg-cyan-700')
+                        $('#edit').prop('disable', false);
+                        $('#edit').removeClass('bg-gray-500')
+                        $('#edit').addClass('bg-blue-600')
+                        $('#edit').addClass('hover:bg-blue-500')
+                        $('#edit').addClass('active:bg-blue-700')
+                        $('#gen').removeClass('bg-gray-500')
+                        $('#gen').addClass('bg-green-600')
+                        $('#gen').addClass('hover:bg-green-500')
+                        $('#gen').addClass('active:bg-green-700')
+                        $('#clear').removeClass('bg-gray-500')
+                        $('#clear').addClass('bg-red-600')
+                        $('#clear').addClass('hover:bg-red-500')
+                        $('#clear').addClass('active:bg-red-700')
+                    }
+                }
+            });
+
+            $('#determine').click(() => {
+                if (editable) return;
+                detemineTile();
+            });
+
+            $('#M').change((e) => {
+                if (e.target.value > 20) 
+                    $('#M').val(20);
+                if (e.target.value < 1) 
+                    $('#M').val(1);
+            });
+
+            $('#N').change((e) => {
+                if (e.target.value > 20) 
+                    $('#N').val(20);
+                if (e.target.value < 1) 
+                    $('#N').val(1);
+            });
+
+            $('#solve').click(() => {
+
+                $('#solve').empty();
+                $('#solve').append('<div class="flex items-center"> <svg aria-hidden="true" class="w-5 h-5 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/> <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/></svg> Solve!</div>');
+                
+                let m = Number($('#M').val()), n = Number($('#N').val());
+
+                for (let i = 1; i <= m*n; i++) {
+                    $(`#${i}`).empty();
+                    $(`#${i}`).removeClass(coloredCell);
+                }
+
+                detemineTile();
+                
+                let CC = [];
+                for (let i = 1; i <= n; i++) {
+                    if (!$(`#CC${i}`).val()) 
+                        CC.push(-1);
+                    else 
+                        CC.push(Number($(`#CC${i}`).val()));
+                }
+                let CR = [];
+                for (let i = 1; i <= m; i++) {
+                    if (!$(`#CR${i}`).val()) 
+                        CR.push(-1);
+                    else
+                        CR.push(Number($(`#CR${i}`).val()));
+                }
+                
+                let data = {
+                    m: Number($('#M').val()),
+                    n: Number($('#N').val()),
+                    CC,
+                    CR,
+                    CG: visited
+                };
+                
+                // console.log(data);
+                $.post('/api/solver', JSON.stringify(data), (res, status) => {
+                    $('#solve').empty();
+                    $('#solve').append('Solve!');
+                    // console.log(res);
+                    let model = res?.Model
+                    if (!model) {
+                        $('#grid').removeClass('bg-green-400');
+                        $('#grid').addClass('bg-orange-200');
+                        $('#solvestatus').append('No Solution');
+                        return;
+                    }
+
+                    for (let i = 0; i < model.length; i++) {
+                        // console.log(model[i]);
+                        if (model[i] > 0) {
+                            setColored.add(visited[idToCell(model[i])[0]][idToCell(model[i])[1]]);
+                            $(`#${Math.abs(model[i])}`).addClass(coloredCell);
+                        } else
+                            $(`#${Math.abs(model[i])}`).removeClass(coloredCell);
+                    }
+                    // console.log(setColored);
+                    $("#solvestatus").append("Solved");
+                    $('#grid').removeClass('bg-orange-200');
+                    $('#grid').addClass('bg-green-400');
+                });
+            });
+
+            $('#grid')
+            .on('change', '.constraint-col', (e) => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+    
+                if (e.target.value == '')
+                    return;
+                    
+                    if (e.target.value >= m)
+                    e.target.value = m;
+                    if (e.target.value <= 0)
+                    e.target.value = 0;
+                }
+            )   
+            .on('change', '.constraint-row', (e) => {
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+                
+                if (e.target.value == '')
+                    return;
+
+                if (e.target.value >= n)
+                    e.target.value = n;
+                if (e.target.value <= 0)
+                    e.target.value = 0;
+                }
+            )
+            .on('mousedown', '.cell', (e) => {
+                isDragging = true;
+                
+                let m = Number($('#M').val());
+                let n = Number($('#N').val());
+
+                if (coloring) {
+                    // console.log(e.target.id);
+                    let now = Number(e.target.id);
+                    for (let i = 1; i <= m; i++) 
+                        for (let j = 1; j <= n; j++) 
+                            if (visited[i-1][j-1] === visited[idToCell(now)[0]][idToCell(now)[1]])
+                                if ($(`#${(i-1)*n+j}`).hasClass(coloredCell)) {
+                                    $(`#${(i-1)*n+j}`).removeClass(coloredCell);
+                                    if (setColored.has(visited[idToCell(now)[0]][idToCell(now)[1]]))
+                                        setColored.delete(visited[idToCell(now)[0]][idToCell(now)[1]])
+                                } else {
+                                    $(`#${(i-1)*n+j}`).addClass(coloredCell);
+                                    if (!setColored.has(visited[idToCell(now)[0]][idToCell(now)[1]])) 
+                                        setColored.add(visited[idToCell(now)[0]][idToCell(now)[1]])
+                                }
+                    validate();
+                }
+
+                if (editable) {
+                    let now = Number(e.target.id);
+                    arr[id].add(now);
+
+                    let x = idToCell(now)[0], y = idToCell(now)[1];
+
+                    cells[x][y] = id;
+                    document.getElementById(now).classList.add('border-r-blue-700');
+                    document.getElementById(now).classList.add('border-l-blue-700');
+                    document.getElementById(now).classList.add('border-t-blue-700');
+                    document.getElementById(now).classList.add('border-b-blue-700');
+
+                    if (isInside(x, y+1) && cells[x][y+1] != cells[x][y]) {
+                        $(`#${cellToId(x,y+1)}`).addClass('border-l-blue-700');
+                    }
+                    if (isInside(x, y-1) && cells[x][y-1] != cells[x][y]) {
+                        $(`#${cellToId(x,y-1)}`).addClass('border-r-blue-700');
+                    }
+                    if (isInside(x+1, y) && cells[x+1][y] != cells[x][y]) {
+                        $(`#${cellToId(x+1,y)}`).addClass('border-t-blue-700');
+                    }
+                    if (isInside(x-1, y) && cells[x-1][y] != cells[x][y]) {
+                        $(`#${cellToId(x-1,y)}`).addClass('border-b-blue-700');
+                    }
+                }
+            })
+            .on('mousemove', '.cell', (e) => {
+                if (!isDragging) return;
+                if (editable) {
+
+                    let now = Number(e.target.id);
+    
+                    let m = Number($('#M').val());
+                    let n = Number($('#N').val());
+                    
+                    document.getElementById(now).classList.add('border-r-blue-700');
+                    document.getElementById(now).classList.add('border-l-blue-700');
+                    document.getElementById(now).classList.add('border-t-blue-700');
+                    document.getElementById(now).classList.add('border-b-blue-700');
+    
+                    arr[id].add(now);
+
+                    let x = idToCell(now)[0], y = idToCell(now)[1];
+                    
+                    cells[x][y] = id;
+                    if (arr[id].has(now+1)) {   // kanan
+                        if (now % n != 0)
+                            document.getElementById(now).classList.remove('border-r-blue-700');
+    
+                        if (((now+1) % n) != 1)
+                            document.getElementById(now+1).classList.remove('border-l-blue-700');
+                    }
+                    if (arr[id].has(now-1)) {   // kiri
+                        if ((now) % n != 1)
+                            document.getElementById(now).classList.remove('border-l-blue-700');
+                        
+                        if (((now-1) % n) != 0)
+                            document.getElementById(now-1).classList.remove('border-r-blue-700');
+                    }
+                    if (arr[id].has(now-n)) {   // atas
+                        document.getElementById(now).classList.remove('border-t-blue-700');
+                        document.getElementById(now-n).classList.remove('border-b-blue-700');
+                    }
+                    if (arr[id].has(now+n)) {   // bawah
+                        document.getElementById(now).classList.remove('border-b-blue-700');
+                        document.getElementById(now+n).classList.remove('border-t-blue-700');
+                    }
+
+                    if (isInside(x, y+1) && cells[x][y+1] != cells[x][y]) {
+                        $(`#${cellToId(x,y+1)}`).addClass('border-l-blue-700');
+                    }
+                    if (isInside(x, y-1) && cells[x][y-1] != cells[x][y]) {
+                        $(`#${cellToId(x,y-1)}`).addClass('border-r-blue-700');
+                    }
+                    if (isInside(x+1, y) && cells[x+1][y] != cells[x][y]) {
+                        $(`#${cellToId(x+1,y)}`).addClass('border-t-blue-700');
+                    }
+                    if (isInside(x-1, y) && cells[x-1][y] != cells[x][y]) {
+                        $(`#${cellToId(x-1,y)}`).addClass('border-b-blue-700');
+                    }
+                }
+            })
+            .on('mouseup', '.cell', () => {
+                prev = 0;
+                isDragging = false;
+                id++;
+            })
+        })
+    </script>
+</head>
+<body>
+    <div class="fixed bg-gray-400 h-full w-full sm:block lg:invisible md:invisible flex p-4 text-white text-center opacity-90 items-center text-3xl">
+        Please change to desktop mode or use PC/Laptop instead.
+    </div>
+    <nav class="flex z-20 items-center py-4 px-32 bg-green-100 border-b border-green-600 border-b-4">
+        <p class="text-2xl font-bold">Tilepaint Solver</p>
+    </nav>
+    <div class="z-10 flex flex-col items-center gap-6 py-8">
+        <div class="flex flex-col items-center">
+            <p class="text-3xl font-semibold">Tilepaint</p>
+            <hr class="bg-green-600 w-24 h-1">
+        </div>
+        <div class="flex items-center gap-3">
+            <label>Construct the grid via file upload:</label>
+            <input id="file" type="file" accept=".txt, .in">
+        </div>
+        <div class="flex items-center gap-3">
+            <div>
+                <label>Row</label>
+                <input id="M" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20">
+            </div>
+            <div>
+                <label>Column</label>
+                <input id="N" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20">
+            </div>
+            <button id="gen" class="bg-green-600 px-3 py-1 rounded text-white hover:bg-green-500 active:bg-green-700">Generate</button>
+            <button id="random" class="bg-orange-600 px-3 py-1 rounded text-white hover:bg-orange-500 active:bg-orange-700">Randomize</button>
+            <button id="edit" class="bg-blue-600 px-3 py-1 rounded text-white hover:bg-blue-500 active:bg-blue-700">Edit Grid</button>
+            <button id="clear" class="bg-red-600 px-3 py-1 rounded text-white hover:bg-red-500 active:bg-red-700">Clear</button>
+            <button id="determine" class="bg-yellow-600 px-3 py-1 rounded text-white hover:bg-yellow-500 active:bg-yellow-700">Determine Tile</button>
+            <button id="color" class="bg-cyan-600 px-3 py-1 rounded text-white hover:bg-cyan-500 active:bg-cyan-700">Color Tile</button>
+            <button id="solve" class="bg-purple-600 px-3 py-1 rounded text-white hover:bg-purple-500 active:bg-purple-700">Solve!</button>
+            <p id="status" class="text-2xl"></p>
+        </div>
+        <div class="min-w-fit w-2/3 h-fit p-5 bg-emerald-200">
+            <div class="flex flex-col items-center">
+                <div id="grid" class="flex flex-col p-2 bg-orange-200 h-fit items-end">
+                    
+                </div>
+            </div>
+            <p id="solvestatus" class="text-center"></p>
+        </div>
+        <div class="flex flex-col items-center">
+            <p class="text-3xl font-semibold">How To Play</p>
+            <hr class="bg-green-600 w-36 h-1">
+        </div>
+        <div class="w-2/3 px-5 bg-emerald-200">
+            <ol class="list-decimal p-4 flex flex-col gap-1">
+                <li>Fill the input <span class="text-red-500">M</span> and <span class="text-red-500">N</span> with a value between <span class="text-red-500">1</span> to <span class="text-red-500">20</span> and press <button class="bg-green-600 px-3 rounded text-white cursor-default">Generate</button> .</li>
+                <li>
+                    You also can upload a "*.txt" or "*.in" extension file to construct the grid. 
+                    The content of the file are follows:
+                    <ul class="list-disc pl-5">
+                        <li>First line contains a non-negative integer <span class="text-red-500">M</span> and <span class="text-red-500">N</span> respectively denoting the number of rows and columns.</li>
+                        <li>Second line consists of an <span class="text-red-500">N</span> number (<span class="text-red-500">-1</span> means no constraint) denoting the constraint of each column.</li>
+                        <li>Third line consists of an <span class="text-red-500">M</span> number (<span class="text-red-500">-1</span> means no constraint) denoting the constraint of each row.</li>
+                        <li>
+                            The next <span class="text-red-500">M</span> lines consist of an <span class="text-red-500">M</span> number of integer denoting which tile the cell belongs to.
+                            The tile number must be unique and each unique number must orthogonally connect to each other.
+                        </li>
+                    </ul>
+                    Click <a class="underline text-cyan-600 hover:text-purple-600" href="{% static "1.txt" %}" download="a.txt">here</a> for the example file.</li>
+                <li>Red squares <button class="inline text-center w-4 h-4 border-2 border-red-500 bg-white cursor-default"></button> on the grid that is generated are the numerical constraint. 
+                    It can be filled with a non-negative number between <span class="text-red-500">0</span> to <span class="text-red-500">M</span> for the column constraint (resp. <span class="text-red-500">N</span> for row constraint).
+                </li>
+                <li>
+                    To create the tile, press <button class="bg-blue-600 px-3 rounded text-white cursor-default">Edit Grid</button> to enable/disable tile editing. 
+                    Press the cell in the grid to make a tile.
+                    Hold and drag to make some cells in a same tile and release to stop making a single tile.
+                </li>
+                <li>
+                    Press <button class="bg-yellow-600 px-3 rounded text-white cursor-default">Determine Tile</button> to see the tile number.
+                </li>
+                <li>
+                    You can try to solve the puzzles by coloring some tiles that previously created.
+                    Press <button class="bg-cyan-600 px-3 rounded text-white cursor-default">Color Tile</button> to enable/disable coloring.
+                    Then press a cell/tile you wanted to color/uncolor.
+                </li>
+                <li>
+                    Press <button class="bg-red-600 px-3 rounded text-white cursor-default">Clear</button> to reset the tile number and coloring status of each tile in the grid.
+                    If the number of colored cell in each column and row match the constraint, the orange box will change color to <span class="px-1 rounded text-white bg-green-600">green</span> and a "Solved" text will appear.
+                </li>
+                <li>
+                    Press <button class="bg-purple-600 px-3 rounded text-white cursor-default">Solve!</button> to use the solver to automatically find a solution to the puzzle (if any).
+                </li>
+                <li>
+                    Press <button class="bg-green-600 px-3 rounded text-white cursor-default">Generate</button> to create new grid or to reset the grid tiles.
+                </li>
+            </ol>
+        </div>
+        <div class="flex flex-col items-center">
+            <p class="text-3xl font-semibold"></p>
+            <hr class="bg-green-600 w-36 h-1">
+        </div>
+        <div class="flex flex-col items-center">
+            <p class="text-3xl font-semibold">Example</p>
+            <hr class="bg-green-600 w-24 h-1">
+            <p class="py-3"></p>
+            <img src={% static "nikoli.png" %} class="w-2/3" alt="nikoli" />
+        </div>
+        <div class="flex flex-col items-center">
+            <p class="text-3xl font-semibold">Rules</p>
+            <hr class="bg-green-600 w-16 h-1">
+        </div>
+        <div class="w-2/3">
+            <ol class="list-decimal">
+                <li>The areas enclosed by bold lines (blue line in this application) are called “Tiles” and you color the tiles with the following rules.</li>
+                <li>A number in a cell with a diagonal line tells the number of black cells there has to be to the right or downward in the line/column of the cell with the diagonal, till the limit of the grid or another cell with a diagonal and numbers.</li>
+                <li>The cells of a tile must all be colored or left uncolored.</li>
+                <li>The solution will show the outline of a thing or object.</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
