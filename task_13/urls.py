@@ -17,11 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import Home
-from .controllers import solveTilepaint, validateTilepaint
+from .controllers import solveTilepaint, validateTilepaint, getTC
 
 urlpatterns = [
     path('', Home),
     path('api/solver', solveTilepaint),
     path('api/validate', validateTilepaint),
+    path('api/getTC/<int:id>', getTC),
     path('admin/', admin.site.urls),
 ]

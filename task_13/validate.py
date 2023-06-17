@@ -17,6 +17,9 @@ def isSumEqual(CC, CR):
 
 def complyConstraint(Cell, CC, CR, m, n): 
     coloredCol, coloredRow = [0 for _ in range(n)], [0 for _ in range(m)]
+
+    cr, cc = [], []
+
     for i in range(m):
         for j in range(n):
             if (Cell[i][j] == 1):
@@ -25,13 +28,13 @@ def complyConstraint(Cell, CC, CR, m, n):
 
     for j in range(n) :
         if (CC[j] != -1 and coloredCol[j] != CC[j]) :
-            return False
-    
+            cc.append(j+1)
+
     for i in range(m) :
         if (CR[i] != -1 and coloredRow[i] != CR[i]) :
-            return False
-    
-    return True
+            cr.append(i+1)
+
+    return len(cc) == 0 and len(cr) == 0, cc, cr
 
 def IsAllSame(CG, Cell, m, n, p):
     colored, cellTotal = [0 for _ in range(p+1)], [0 for _ in range(p+1)]
@@ -66,9 +69,8 @@ def validate(M, N, CG, S, CC, CR):
 
     rule1 = isSumEqual(CC, CR)
     rule2 = IsAllSame(CG, Cell, M, N, MaxT)
-    # print(S)
-    rule3 = complyConstraint(Cell, CC, CR, M, N)
+    rule3, cc, cr = complyConstraint(Cell, CC, CR, M, N)
 
     # print(rule1, rule2, rule3)
 
-    return {'Model': rule1 and rule2 and rule3}
+    return {'Model': rule1 and rule2 and rule3, "cc": cc, "cr": cr}
