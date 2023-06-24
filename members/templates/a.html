@@ -34,6 +34,9 @@
             let cells = [];
             let setColored = new Set();
             let coloredCell = 'bg-slate-400'
+            let coloredButton = 'bg-green-800'
+            let coloredHover = 'bg-green-900'
+            let coloredActive = 'bg-green-700'
             let howToExtend = true;
             let challenge = false;
             let challengeNum = 1;
@@ -97,6 +100,8 @@
                     }
                 }
             }
+            
+            gen();
 
             $('#gen').click(() => {
                 if (!coloring) {
@@ -106,15 +111,17 @@
 
             $('#edit').click(() => {
                 if (!coloring && !challenge) {
+                    
                     setColored = new Set();
                     let m = Number($('#M').val()), n = Number($('#N').val());
                     for (let i = 1; i <= m*n; i++) {
                         $(`#${i}`).empty();
                         $(`#${i}`).removeClass(coloredCell);
                     }
-                    $('#status').empty();
                     editable = !editable
                     if (editable) {
+                        $('#tutorial-msg').empty();
+                        $('#tutorial-msg').append('Click a cell')
                         $('#determine').removeClass('bg-yellow-600')
                         $('#determine').addClass('bg-gray-500')
                         $('#determine').removeClass('hover:bg-yellow-500')
@@ -131,6 +138,7 @@
                         $('#edit').addClass('hover:bg-red-500')
                         $('#edit').addClass('active:bg-red-700')
                     } else {
+                        $('#tutorial-msg').empty()
                         $('#determine').removeClass('bg-gray-500')
                         $('#determine').addClass('bg-yellow-600')
                         $('#determine').addClass('hover:bg-yellow-500')
@@ -203,22 +211,24 @@
                     if (res.Model == true) {
                         if (challenge) {
                             challangeData[challengeNum-1].solved = true;
-                            $(`#CL${challengeNum}`).removeClass('bg-gray-300');
-                            $(`#CL${challengeNum}`).addClass('bg-green-300');
+                            $(`#CL${challengeNum}`).removeClass('bg-gray-400');
+                            $(`#CL${challengeNum}`).addClass('bg-green-400');
                         }
-                        $('#solvestatus').empty()
-                        $('#solvestatus').append('Solved')
+                        $('#tutorial-msg').empty()
+                        $('#tutorial-msg').append('Solved')
                         $('#grid').removeClass('bg-orange-200');
                         $('#grid').addClass('bg-green-400');
                     } else {
                         if (challenge) {
                             challangeData[challengeNum-1].solved = false;
-                            $(`#CL${challengeNum}`).addClass('bg-gray-300');
-                            $(`#CL${challengeNum}`).removeClass('bg-green-300');
+                            $(`#CL${challengeNum}`).addClass('bg-gray-400');
+                            $(`#CL${challengeNum}`).removeClass('bg-green-400');
                         }
                         $('#grid').removeClass('bg-green-400');
                         $('#grid').addClass('bg-orange-200');
-                        $('#solvestatus').empty()
+                        if (!challenge) {
+                            $('#tutorial-msg').empty()
+                        }
                     }
                 });
             }
@@ -260,8 +270,8 @@
                             $(`#CL${challengeNum}`).removeClass('bg-gray-300');
                             $(`#CL${challengeNum}`).addClass('bg-green-300');
                         }
-                        $('#solvestatus').empty()
-                        $('#solvestatus').append('Solved')
+                        $('#tutorial-msg').empty()
+                        $('#tutorial-msg').append('Solved!');
                         $('#grid').removeClass('bg-orange-200');
                         $('#grid').addClass('bg-green-400');
                     } else {
@@ -279,7 +289,8 @@
 
                         $('#grid').removeClass('bg-green-400');
                         $('#grid').addClass('bg-orange-200');
-                        $('#solvestatus').empty()
+                        $('#tutorial-msg').empty()
+                        $('#tutorial-msg').append('You are on the wrong track. Keep trying!');
                     }
                 });
             });
@@ -563,8 +574,20 @@
             $('.challenge-num').click((e) => {
                 // console.log(challangeData);
                 try {
-                    challengeNum = e.target.value;
                     constructGrid(challangeData[e.target.value-1].m, challangeData[e.target.value-1].n, challangeData[e.target.value-1].res, challangeData[e.target.value-1].S, challangeData[e.target.value-1].complete, challangeData[e.target.value-1].solved, challangeData[e.target.value-1].cc, challangeData[e.target.value-1].cr)
+                    
+                    $(`#CL${challengeNum}`).removeClass('text-cyan-300');
+                    $(`#CL${challengeNum}`).removeClass('border-cyan-500');
+                    challengeNum = e.target.value;
+                    $(`#CL${challengeNum}`).addClass('text-cyan-300');
+                    $(`#CL${challengeNum}`).addClass('border-cyan-500');
+                    if (challenge) {
+                        $('#tutorial-msg').empty();
+                        if (challangeData[challengeNum-1].solved) 
+                            $('#tutorial-msg').append('Solved!');
+                        else
+                            $('#tutorial-msg').append('Click a cell to color or uncolor');
+                    }
                 } catch (e) {
 
                 }
@@ -622,6 +645,19 @@
                 challenge = !challenge;
                 disableAll();
                 if (challenge) {
+                    $(`#CL${challengeNum}`).removeClass('border-cyan-500');
+                    $(`#CL${challengeNum}`).removeClass('text-cyan-300');
+                    for (let i = 1; i <= 20; i++) {
+                        $(`#CL${i}`).removeClass('bg-gray-500');
+                        $(`#CL${i}`).addClass('bg-gray-400');
+                        $(`#CL${i}`).addClass('hover:bg-gray-300');
+                        $(`#CL${i}`).addClass('active:bg-gray-500');
+                    }
+
+                    $(`#CL1`).addClass('border-cyan-500');
+                    $(`#CL1`).addClass('text-cyan-300');
+
+                    $('#tutorial-msg').append('Click a cell to color or uncolor');
                     challangeData = [];
                     for (let i = 1; i <= 20; i++) { $(`#CL${i}`).removeClass('bg-green-300'); $(`#CL${i}`).addClass('bg-gray-300'); }
 
@@ -641,6 +677,14 @@
                     constructGrid(challangeData[0].m, challangeData[0].n, challangeData[0].res, challangeData[0].S, challangeData[0].complete, challangeData[0].solved, challangeData[0].cc, challangeData[0].cr)
                     coloring = 1;
                 } else {
+                    let m = $('#M').val();
+                    let n = $('#N').val();
+                    for (let i = 1; i <= n; i++)
+                        $(`#CC${i}`).removeClass('bg-red-300'); 
+                    for (let i = 1; i <= m; i++)
+                        $(`#CR${i}`).removeClass('bg-red-300'); 
+                    
+                    $('#tutorial-msg').empty();
                     coloring = 0;
                     $('#challenge').empty();
                     $('#challenge').addClass('bg-green-600');
@@ -702,9 +746,6 @@
                     }
                 }
 
-                // detemineTile();
-                // console.log(cells);
-
                 for (let i = 0; i < m; i++) {
                     for (let j = 0; j < n; j++) {
                         if (isInside(i+1, j) && cells[i+1][j] != cells[i][j]) 
@@ -717,56 +758,6 @@
                             $(`#${cellToId(i,j)}`).addClass('border-l-blue-700');
                     }
                 }
-                // const reader = new FileReader();
-                // reader.onload = await ((e) => {
-                //     try {
-                //         let text = e.target.result;
-    
-                //         let arr = text.trim().split('\n')
-                //         for (let i = 0; i < arr.length; i++) {
-                //             arr[i] = arr[i].trim().split(' ')
-                //         }
-                //         // console.log(arr);
-                //         let m = arr[0][0], n = arr[0][1]
-
-                //         $('#M').val(m);
-                //         $('#N').val(n);
-
-                //         gen();
-
-                //         for (let i = 0; i < n; i++)
-                //             if (arr[1][i] != -1)
-                //                 $(`#CC${i+1}`).val(arr[1][i]);
-                //         for (let i = 0; i < m; i++)
-                //             if (arr[2][i] != -1)
-                //                 $(`#CR${i+1}`).val(arr[2][i]);
-                            
-                //         for (let i = 0; i < m; i++) {
-                //             for (let j = 0; j < n; j++) {
-                //                 cells[i][j] = Number(arr[i+3][j]);
-                //             }
-                //         }
-
-                //         // detemineTile();
-                //         // console.log(cells);
-
-                //         for (let i = 0; i < m; i++) {
-                //             for (let j = 0; j < n; j++) {
-                //                 if (isInside(i+1, j) && cells[i+1][j] != cells[i][j]) 
-                //                     $(`#${cellToId(i,j)}`).addClass('border-b-blue-700');
-                //                 if (isInside(i, j+1) && cells[i][j+1] != cells[i][j]) 
-                //                     $(`#${cellToId(i,j)}`).addClass('border-r-blue-700');
-                //                 if (isInside(i-1, j) && cells[i-1][j] != cells[i][j]) 
-                //                     $(`#${cellToId(i,j)}`).addClass('border-t-blue-700');
-                //                 if (isInside(i, j-1) && cells[i][j-1] != cells[i][j]) 
-                //                     $(`#${cellToId(i,j)}`).addClass('border-l-blue-700');
-                //             }
-                //         }
-                //     } catch (e) {
-                //         console.error("File data is not valid \n", e);
-                //     }
-                // });
-                // res = reader.readAsText(res, "UTF-8");
             });
 
             $('#clear').click(() => {
@@ -779,7 +770,7 @@
                     $('.constraint-col').val('');
                     $('.constraint-row').val('');
                     $('#status').empty();
-                    $('#solvestatus').empty();
+                    $('#tutorial-msg').empty();
                     $('#grid').removeClass('bg-green-400');
                     $('#grid').addClass('bg-orange-200');
                     setColored = new Set();
@@ -792,6 +783,8 @@
     
                     detemineTile();
                     if (coloring) {
+                        $('#tutorial-msg').empty();
+                        $('#tutorial-msg').append('Click a cell to color or uncolor');
                         $('#determine').removeClass('bg-yellow-600')
                         $('#determine').addClass('bg-gray-500')
                         $('#determine').removeClass('hover:bg-yellow-500')
@@ -816,6 +809,7 @@
                         $('#clear').removeClass('active:bg-red-700')
                         $('#clear').addClass('bg-gray-500')
                     } else {
+                        $('#tutorial-msg').empty();
                         $('#determine').removeClass('bg-gray-500')
                         $('#determine').addClass('bg-yellow-600')
                         $('#determine').addClass('hover:bg-yellow-500')
@@ -891,15 +885,16 @@
                     else
                         CR.push(Number($(`#CR${i}`).val()));
                 }
-                
+
                 let data = {
                     m: Number($('#M').val()),
                     n: Number($('#N').val()),
                     CC,
                     CR,
-                    CG: visited
+                    CG: visited ?? [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
                 };
                 
+                $("#tutorial-msg").empty();
                 for (let i = 1; i <= m; i++) 
                     $(`#CR${i}`).removeClass('bg-red-300');
                 for (let i = 1; i <= n; i++) 
@@ -913,7 +908,7 @@
                     if (!model) {
                         $('#grid').removeClass('bg-green-400');
                         $('#grid').addClass('bg-orange-200');
-                        $('#solvestatus').append('No Solution');
+                        $('#tutorial-msg').append('No Solution');
                         return;
                     }
 
@@ -926,7 +921,7 @@
                             $(`#${Math.abs(model[i])}`).removeClass(coloredCell);
                     }
                     // console.log(setColored);
-                    $("#solvestatus").append("Solved");
+                    $("#tutorial-msg").append("Solved");
                     $('#grid').removeClass('bg-orange-200');
                     $('#grid').addClass('bg-green-400');
                 });
@@ -1008,7 +1003,15 @@
                     validate();
                 }
 
+                if (challenge) {
+                    $('#tutorial-msg').empty();
+                    $('#tutorial-msg').append('Click a cell to color or uncolor');
+                }
+
                 if (editable) {
+                    $('#tutorial-msg').empty();
+                    $('#tutorial-msg').append('Drag your cursor over adjacent cells to make them in the same tile');
+
                     let now = Number(e.target.id);
                     arr[id].add(now);
 
@@ -1091,6 +1094,11 @@
                 }
             })
             .on('mouseup', '.cell', () => {
+                if (editable) { 
+                    $('#tutorial-msg').empty();
+                    $('#tutorial-msg').append('Click a cell');
+                }             
+
                 prev = 0;
                 isDragging = false;
                 id++;
@@ -1099,10 +1107,10 @@
     </script>
 </head>
 <body>
-    <nav class="flex z-20 items-center py-4 px-32 bg-green-100 border-green-600 border-b-4">
-        <p class="text-2xl font-bold">Tilepaint Solver</p>
+    <nav class="flex z-20 flex-col items-center py-4 px-32 bg-white border-b-2 border-green-500">
+        <p class="text-5xl font-bold">Tilepaint Puzzle App</p>
     </nav>
-    <div class="z-10 flex flex-col items-center gap-6 py-8">
+    <div class="z-10 flex flex-col items-center gap-6 py-4">
         <div class="flex flex-col items-center">
             <p class="text-3xl font-semibold">Tilepaint</p>
             <hr class="bg-green-600 w-24 h-1">
@@ -1116,11 +1124,11 @@
         <div class="flex items-center gap-3">
             <div>
                 <label>Row</label>
-                <input id="M" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20">
+                <input id="M" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20" value="4">
             </div>
             <div>
                 <label>Column</label>
-                <input id="N" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20">
+                <input id="N" class="p-2 border-2 border-gray-500 rounded h-8 w-16" type="number" min="1" max="20" value="4">
             </div>
             <button id="gen" class="bg-green-600 px-3 py-1 rounded text-white hover:bg-green-500 active:bg-green-700">Generate</button>
             <button id="random" class="bg-orange-600 px-3 py-1 rounded text-white hover:bg-orange-500 active:bg-orange-700">Randomize</button>
@@ -1133,36 +1141,38 @@
             <button id="manual-validate" class="bg-green-600 px-3 py-1 rounded text-white hover:bg-green-500 active:bg-green-700">Validate!</button>
             <button id="solve" class="bg-purple-600 px-3 py-1 rounded text-white hover:bg-purple-500 active:bg-purple-700">Solve!</button>
         </div>
-        <div class="min-w-fit w-2/3 h-fit p-5 bg-emerald-200">
+        <div class="min-w-fit w-2/3 h-fit p-5 bg-emerald-200 relative">
             <div class="flex flex-col items-center">
-                <div id="grid" class="flex flex-col p-2 bg-orange-200 h-fit items-end">
-                    
+                <div id="tutorial-msg" class="absolute text-lg top-2">
+
+                </div>
+                <div id="grid" class="flex flex-col mt-4 p-2 bg-orange-200 h-fit items-end">
+
                 </div>
             </div>
-            <p id="solvestatus" class="text-center"></p>
         </div>
-        <div class="grid lg:grid-cols-10 md:grid-cols-5 w-1/3 place-items-center">
+        <div class="grid lg:grid-cols-10 md:grid-cols-5 w-1/3 place-items-center gap-2">
             <button id="challenge" class="bg-green-600 w-48 lg:col-span-10 md:col-span-5 px-3 py-1 rounded my-2 text-white hover:bg-green-500 active:bg-green-700">Challenge!</button>
-            <button id="CL1" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="1">1</button>
-            <button id="CL2" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="2">2</button>
-            <button id="CL3" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="3">3</button>
-            <button id="CL4" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="4">4</button>
-            <button id="CL5" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="5">5</button>
-            <button id="CL6" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="6">6</button>
-            <button id="CL7" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="7">7</button>
-            <button id="CL8" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="8">8</button>
-            <button id="CL9" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="9">9</button>
-            <button id="CL10" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="10">10</button>
-            <button id="CL11" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="11">11</button>
-            <button id="CL12" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="12">12</button>
-            <button id="CL13" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="13">13</button>
-            <button id="CL14" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="14">14</button>
-            <button id="CL15" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="15">15</button>
-            <button id="CL16" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="16">16</button>
-            <button id="CL17" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="17">17</button>
-            <button id="CL18" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="18">18</button>
-            <button id="CL19" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="19">19</button>
-            <button id="CL20" class="challenge-num bg-gray-300 rounded border border-black w-12 py-1 col-span-1" value="20">20</button>
+            <button id="CL1" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="1">1</button>
+            <button id="CL2" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="2">2</button>
+            <button id="CL3" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="3">3</button>
+            <button id="CL4" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="4">4</button>
+            <button id="CL5" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="5">5</button>
+            <button id="CL6" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="6">6</button>
+            <button id="CL7" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="7">7</button>
+            <button id="CL8" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="8">8</button>
+            <button id="CL9" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="9">9</button>
+            <button id="CL10" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="10">10</button>
+            <button id="CL11" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="11">11</button>
+            <button id="CL12" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="12">12</button>
+            <button id="CL13" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="13">13</button>
+            <button id="CL14" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="14">14</button>
+            <button id="CL15" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="15">15</button>
+            <button id="CL16" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="16">16</button>
+            <button id="CL17" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="17">17</button>
+            <button id="CL18" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="18">18</button>
+            <button id="CL19" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="19">19</button>
+            <button id="CL20" class="challenge-num bg-gray-500 text-white rounded border-2 border-gray-700 w-12 py-1 col-span-1" value="20">20</button>
         </div>
         <div class="flex flex-col items-center">
             <div class="flex items-center gap-2">
@@ -1174,9 +1184,9 @@
             <button id="howtobutton" class="bg-green-600 text-white px-2 rounded"> - </button>
             <div class="howto">
                 <ol class="list-decimal p-4 flex flex-col gap-1">
-                    <li>Fill the input <span class="text-red-500">M</span> and <span class="text-red-500">N</span> with a value between <span class="text-red-500">1</span> to <span class="text-red-500">20</span> and press <button class="bg-green-600 px-3 rounded text-white cursor-default">Generate</button> .</li>
+                    <li>Fill the <span class="text-red-500">Row</span> and <span class="text-red-500">Column</span> with a value between <span class="text-red-500">1</span> to <span class="text-red-500">20</span> and press <button class="bg-green-600 px-3 rounded text-white cursor-default">Generate</button> . You can press <button class="bg-orange-600 px-3 rounded text-white cursor-default">Randomize</button> to generate a random puzzle or press <button class="bg-green-600 px-3 rounded text-white cursor-default">Challenge!</button> to play 20 levels of puzzle challenge </li>
                     <li>Red squares <button class="inline text-center w-4 h-4 border-2 border-red-500 bg-white cursor-default"></button> on the grid that is generated are the numerical constraint. 
-                        It can be filled with a non-negative number between <span class="text-red-500">0</span> to <span class="text-red-500">M</span> for the column constraint (resp. <span class="text-red-500">N</span> for row constraint).
+                        It can be filled with a non-negative number between <span class="text-red-500">0</span> to <span class="text-red-500">the number of row in the grid</span> for the column constraint (resp. <span class="text-red-500">the number of column in the grid</span> for row constraint).
                     </li>
                     <li>
                         To create the tile, press <button class="bg-blue-600 px-3 rounded text-white cursor-default">Edit Grid</button> to enable/disable tile editing. 
@@ -1227,5 +1237,10 @@
             </ol>
         </div>
     </div>
+    <script>
+        $(document).ready(() => {
+            gen();
+        })
+    </script>
 </body>
 </html>
