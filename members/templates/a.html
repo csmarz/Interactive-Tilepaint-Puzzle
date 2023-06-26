@@ -575,10 +575,14 @@
                 // console.log(challangeData);
                 try {
                     constructGrid(challangeData[e.target.value-1].m, challangeData[e.target.value-1].n, challangeData[e.target.value-1].res, challangeData[e.target.value-1].S, challangeData[e.target.value-1].complete, challangeData[e.target.value-1].solved, challangeData[e.target.value-1].cc, challangeData[e.target.value-1].cr)
-                    
+
                     $(`#CL${challengeNum}`).removeClass('text-cyan-300');
                     $(`#CL${challengeNum}`).removeClass('border-cyan-500');
+                    $(`#CL${challengeNum}`).addClass('border-gray-700');
+                    $(`#CL${challengeNum}`).addClass('text-white');
                     challengeNum = e.target.value;
+                    $(`#CL${challengeNum}`).removeClass('border-gray-700');
+                    $(`#CL${challengeNum}`).removeClass('text-white');
                     $(`#CL${challengeNum}`).addClass('text-cyan-300');
                     $(`#CL${challengeNum}`).addClass('border-cyan-500');
                     if (challenge) {
@@ -649,11 +653,14 @@
                     $(`#CL${challengeNum}`).removeClass('text-cyan-300');
                     for (let i = 1; i <= 20; i++) {
                         $(`#CL${i}`).removeClass('bg-gray-500');
+                        $(`#CL${i}`).removeClass('bg-green-400');
                         $(`#CL${i}`).addClass('bg-gray-400');
                         $(`#CL${i}`).addClass('hover:bg-gray-300');
                         $(`#CL${i}`).addClass('active:bg-gray-500');
                     }
-
+                    
+                    $(`#CL1`).removeClass('border-gray-700');
+                    $(`#CL1`).removeClass('text-white');
                     $(`#CL1`).addClass('border-cyan-500');
                     $(`#CL1`).addClass('text-cyan-300');
 
