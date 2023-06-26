@@ -1,5 +1,5 @@
 """
-WSGI config for task_13 project.
+WSGI config for tilepaint_app project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'task_13.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tilepaint_app.settings')
 
 application = get_wsgi_application()
