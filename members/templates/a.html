@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Tilepaint</title>
+    <link rel="icon" href={% static 'icon.png' %} type="image/png">
 
     <script src={% static 'code.jquery.com_jquery-3.7.0.min.js' %}></script>
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
@@ -79,21 +80,21 @@
                                 $(`#r${i}`).append(`<input id="CC${j+1}" type='number' min='0' class="constraint-col text-center w-10 h-10 border-2 border-red-500"></input>`);
                             else
                                 if (j == 0 && i == 1) 
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-500 border-l-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-700 border-l-blue-700 border-gray-300"></button>`);
                                 else if (i == 1 && j == n - 1)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-500 border-t-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-700 border-t-blue-700 border-gray-300"></button>`);
                                 else if (i == 1)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-t-blue-700 border-gray-300"></button>`);
                                 else if (i == m && j == 0)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-l-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-700 border-l-blue-700 border-gray-300"></button>`);
                                 else if (i == m && j == n - 1)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-r-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-700 border-r-blue-700 border-gray-300"></button>`);
                                 else if (j == 0)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-l-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-l-blue-700 border-gray-300"></button>`);
                                 else if (j == n - 1)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-r-blue-700 border-gray-300"></button>`);
                                 else if (i == m)
-                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-500 border-gray-300"></button>`);
+                                    $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-b-blue-700 border-gray-300"></button>`);
                                 else
                                     $(`#r${i}`).append(`<button id="${(i-1)*$('#N').val()+j+1}" class="cell text-center w-10 h-10 border-2 border-gray-300"></button>`);
                         }
@@ -648,6 +649,15 @@
             $('#challenge').click(() => {
                 challenge = !challenge;
                 disableAll();
+
+                editable = false;
+                $('#edit').removeClass('bg-red-600')
+                $('#edit').removeClass('hover:bg-red-500')
+                $('#edit').removeClass('active:bg-red-700')
+                $('#edit').addClass('bg-blue-600')
+                $('#edit').addClass('hover:bg-blue-500')
+                $('#edit').addClass('active:bg-blue-700')
+
                 if (challenge) {
                     $(`#CL${challengeNum}`).removeClass('border-cyan-500');
                     $(`#CL${challengeNum}`).removeClass('text-cyan-300');
@@ -660,7 +670,7 @@
                         $(`#CL${i}`).addClass('hover:bg-gray-300');
                         $(`#CL${i}`).addClass('active:bg-gray-500');
                     }
-                    
+
                     $(`#CL1`).removeClass('border-gray-700');
                     $(`#CL1`).removeClass('text-white');
                     $(`#CL1`).addClass('border-cyan-500');
@@ -1117,7 +1127,7 @@
 </head>
 <body>
     <nav class="flex z-20 flex-col items-center py-4 px-32 bg-white border-b-2 border-green-500">
-        <p class="text-5xl font-bold">Tilepaint Puzzle App</p>
+        <p class="text-5xl font-bold">Interactive Tilepaint Puzzles</p>
     </nav>
     <div class="z-10 flex flex-col items-center gap-6 py-4">
         <div class="flex flex-col items-center">
