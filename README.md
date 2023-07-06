@@ -1,4 +1,4 @@
-# Tilepaint Puzzle App Repository
+# Interactive Tilepaint Puzzles Repository
 
 Tilepaint (Tairupeinto) is a logic pencil-and-paper puzzle that has proven NP-Complete created by Nikoli and invented by Toshihari Yamamoto in Japan. 
 According to Nikoli manager Jimmy Goto, Tilepaint first appeared in issue 53 of Nikoli's quarterly Puzzle Communication magazine in 1995 and has been published regularly ever since. For more information about the puzzle, see [https://www.nikoli.co.jp/en/puzzles/tilepaint/](https://www.nikoli.co.jp/en/puzzles/tilepaint/).
